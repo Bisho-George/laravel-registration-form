@@ -1,0 +1,101 @@
+let actors = [];
+let flag = true;
+
+function getActor(birthdate) {
+    const xhr = new XMLHttpRequest();
+    if (birthdate == "") return;
+    let date = new Date(birthdate);
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+
+    /*function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }*/
+
+    xhr.addEventListener("readystatechange", function () {
+        if (this.readyState === this.DONE) {
+            if (this.status === 200) {
+                actors = JSON.parse(xhr.response);
+                if (flag) {
+                    for (let index = 0; index < actors.length; index++) {
+                        let nm = actors[index].substr(6, 9);
+                        setTimeout(() => {
+                            getActorName(nm);
+                        }, index * 1000);
+                    }
+                    flag = false;
+                } else {
+                    flag = true;
+                }
+            } else {
+                console.error(
+                    "Failed to get actors",
+                    xhr.status,
+                    xhr.statusText
+                );
+            }
+        }
+    });
+
+    xhr.addEventListener("error", function () {
+        console.error("Failed to get actors");
+    });
+    xhr.open(
+        "GET",
+        "https://online-movie-database.p.rapidapi.com/actors/list-born-today?month=" +
+            month +
+            "&day=" +
+            day
+    );
+    xhr.setRequestHeader(
+        "X-RapidAPI-Key",
+        "992866fa7emsh0ba3f96bd9ad73bp1e1bc2jsnef9a20b36712"
+    );
+    xhr.setRequestHeader(
+        "X-RapidAPI-Host",
+        "online-movie-database.p.rapidapi.com"
+    );
+    xhr.send();
+}
+
+function getActorName(nm) {
+    const data = null;
+
+    const xhr = new XMLHttpRequest();
+    xhr.addEventListener("readystatechange", function () {
+        let actorNames = [];
+
+        if (this.readyState === this.DONE) {
+            let obj = JSON.parse(xhr.response);
+            console.log(obj["name"]);
+            for (let key in obj) {
+                if (key === "name") {
+                    actorNames.push(obj[key]);
+                }
+            }
+            let actorList = document.querySelector("#actor-names");
+            let fragment = document.createDocumentFragment();
+            for (let actor of actorNames) {
+                let actorName = document.createElement("li");
+                let text = document.createTextNode(actor);
+                actorName.appendChild(text);
+                fragment.appendChild(actorName);
+            }
+            actorList.appendChild(fragment);
+        }
+    });
+    xhr.open(
+        "GET",
+        "https://online-movie-database.p.rapidapi.com/actors/get-bio?nconst=" +
+            nm
+    );
+    xhr.setRequestHeader(
+        "X-RapidAPI-Key",
+        "992866fa7emsh0ba3f96bd9ad73bp1e1bc2jsnef9a20b36712"
+    );
+    xhr.setRequestHeader(
+        "X-RapidAPI-Host",
+        "online-movie-database.p.rapidapi.com"
+    );
+    xhr.send();
+}
